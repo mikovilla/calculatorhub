@@ -4,11 +4,9 @@
 
 <MudContainer>
     <br/>
-    <!-- Page heading -->
     <MudText Typo="Typo.h5" Class="mb-2">Add-On Interest Rate Calculator</MudText>
     <MudDivider Class="mb-4" />
 
-    <!-- Form: using MudForm and numeric fields -->
     <EditForm Model="@loanInputs" OnValidSubmit="CalculateLoan">
         <MudStack Spacing="2">
             <MudNumericField T="int"
@@ -26,7 +24,6 @@
         </MudStack>
     </EditForm>
 
-    <!-- Display results if any -->
     @if (loanCalculations.Any())
     {
         <MudTable Items="loanCalculations" Class="mt-6">
@@ -53,14 +50,12 @@
 </MudContainer>
 
 @code {
-    // Model for input
     private LoanInputs loanInputs = new LoanInputs()
     {
         PrincipalAmount = 100_000,
         AddOnInterestRate = 0.39m
     };
 
-    // Calculation results
     private List<LoanCalculation> loanCalculations = new List<LoanCalculation>();
 
     private void CalculateLoan()

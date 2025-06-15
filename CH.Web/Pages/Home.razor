@@ -15,4 +15,27 @@
             The Author
         </MudButton>
     </MudPaper>
+
+	<MudSpacer/>
+	<br />
+	<br />
+
+	<MudTable T="object" Items="@(new object[] { new object() })">
+		<HeaderContent>
+			<MudTh><MudText Typo="Typo.h6">Available Calculators</MudText></MudTh>
+		</HeaderContent>
+		<RowTemplate Context="item">
+            <MudTd>
+                <div style="display: flex; flex-direction: column;">
+                    <MudLink Href="/rr82018">
+                        RR-8 2018
+                    </MudLink>
+                    <MudLink Href="/addon" Class="mt-1">
+                        Add-On Interest Rate
+                    </MudLink>
+                </div>
+            </MudTd>
+		</RowTemplate>
+	</MudTable>
+
 </MudContainer>

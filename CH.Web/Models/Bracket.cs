@@ -239,7 +239,7 @@
                 decimal lowerMPF = 20250;
                 decimal incrementMPF = 500;
                 decimal baseContributionMPF = 50;
-                int rows = 30; // from row 1 to row 30
+                int rows = 30;
 
                 mpfBrackets.Add(new SSSMPFBracket { MinSalary = 0, MaxSalary = 20249.99m, MPF = 0.00m });
                 for (int i = 0; i < rows; i++)
