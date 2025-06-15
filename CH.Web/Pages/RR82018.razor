@@ -4,6 +4,16 @@
 
 <MudContainer>
     <br />
+    <br />
+    <MudBreakpointProvider OnBreakpointChanged="OnBreakpointChanged">
+        @if (currentBreakpoint == Breakpoint.Xs)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+                For the best viewing experience, please rotate your phone to landscape mode.
+            </MudAlert>
+        }
+    </MudBreakpointProvider>
+    <br/>
     <!-- Page heading -->
     <MudText Typo="Typo.h5" Class="mb-2">RR8-2018 Calculator</MudText>
 	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
@@ -24,8 +34,10 @@
 	</MudStack>
 
 	<MudSpacer/>
+    <br />
+    <br />
 
-    <MudTable T="object" Items="@(new object[] { new object() })" Bordered="true" Striped="true">
+    <MudTable T="object" Items="@(new object[] { new object() })" Bordered="true" Striped="true" Breakpoint="Breakpoint.None">
       <!-- Table Header -->
       <HeaderContent>
         <MudTh ColSpan="2">
@@ -215,7 +227,7 @@
             </MudTd>
             <MudTd>
                 <MudPaper class="pa-4">
-                    <MudTable Items="@mpfBracketList" Hover="true" Bordered="true" Striped="true">
+                        <MudTable Items="@mpfBracketList" Hover="true" Bordered="true" Striped="true">
                         <HeaderContent>
                             <MudTh>Salary</MudTh>
                             <MudTh>MPF (ER / EE)</MudTh>
@@ -232,10 +244,11 @@
     </MudTable>
 
 	<MudSpacer/>
+    <br /><br />
 
-	<MudTable T="object" Items="@(new object[] { new object() })">
+    <MudTable T="object" Items="@(new object[] { new object() })" Breakpoint="Breakpoint.None">
 		<HeaderContent>
-			<MudTh>References:</MudTh>
+            <MudTh><MudText Typo="Typo.h6">References</MudText></MudTh>
 		</HeaderContent>
 		<RowTemplate Context="item">
             <div style="display: flex; flex-direction: column;">
@@ -289,6 +302,14 @@
     List<SSSBracket> sssBracketList;
     List<SSSMPFBracket> mpfBracketList;
     decimal net;
+
+    private Breakpoint currentBreakpoint = Breakpoint.Md; // default value
+
+    private void OnBreakpointChanged(Breakpoint breakpoint)
+    {
+        currentBreakpoint = breakpoint;
+        StateHasChanged();
+    }
 
     public async Task Enter(KeyboardEventArgs e)
     {
