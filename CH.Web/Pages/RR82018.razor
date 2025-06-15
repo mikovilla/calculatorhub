@@ -1,0 +1,329 @@
+﻿@page "/rr82018"
+@using CH.Web.Models
+@using static CH.Web.Models.Bracket
+
+<MudContainer>
+    <br />
+    <!-- Page heading -->
+    <MudText Typo="Typo.h5" Class="mb-2">RR8-2018 Calculator</MudText>
+	<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+		<!-- Numeric Input Field -->
+		<MudNumericField T="decimal" 
+						 @bind-Value="monthlySalary" 
+						 Placeholder="Enter your monthly salary" 
+						 Step="0.01m"
+						 Variant="Variant.Outlined"
+						 OnKeyDown="Enter" />
+
+		<!-- Calculate Button -->
+		<MudButton OnClick="Calculate" 
+				   Variant="Variant.Filled" 
+				   Style="cursor:pointer;">
+			Calculate
+		</MudButton>
+	</MudStack>
+
+	<MudSpacer/>
+
+<MudTable T="object" Items="@(new object[] { new object() })" Bordered="true" Striped="true">
+  <!-- Table Header -->
+  <HeaderContent>
+    <MudTh ColSpan="2">
+      <MudPaper Class="pa-4">
+        <MudText>
+            <div>Monthly Salary: @monthlySalary.ToString("N2")</div>
+            <div>Deductions:</div>
+        </MudText>
+        <MudList T="string" Dense="true" Style="list-style: none; color: red;">
+            <MudListItem>Tax: @rr82018Tax</MudListItem>
+            <MudListItem>Philhealth: @phCalculationOverTwo</MudListItem>
+            <MudListItem>Pagibig: @pagibigBracket?.EEShare.ToString("N2")</MudListItem>
+            <MudListItem>SSS: @sssBracket?.EEShare.ToString("N2")</MudListItem>
+            <MudListItem>Total: @(Convert.ToDecimal(rr82018Tax) + Convert.ToDecimal(phCalculationOverTwo) + pagibigBracket?.EEShare + sssBracket?.EEShare)</MudListItem>
+        </MudList>
+        <MudText Bold="true">
+            Take Home (@DateTime.Now.Year): @net.ToString("N2")
+        </MudText>
+      </MudPaper>
+    </MudTh>
+  </HeaderContent>
+
+  <!-- Table Body -->
+  <RowTemplate Context="unused">
+    <!-- First Row: Tax Headings -->
+    <MudTr>
+      <MudTd>Tax (&le; December 31, 2022)</MudTd>
+      <MudTd>Tax (&ge; January 01, 2023)</MudTd>
+    </MudTr>
+
+    <!-- Second Row: Detailed Tax Calculations (if available) -->
+    @if(pre2023bracket != null && rr82018bracket != null)
+    {
+      <MudTr>
+        <!-- Left Column: Pre-2023 Bracket -->
+        <MudTd>
+          <MudText Color="Color.Error">@pre2023Tax / month</MudText>
+          <MudPaper Class="pa-4">
+            <MudTable T="TaxBracket" Items="@pre2023bracket" Dense="true">
+              <HeaderContent>
+                <MudTh>Salary</MudTh>
+                <MudTh>Percentage</MudTh>
+                <MudTh>Taxable Amount</MudTh>
+              </HeaderContent>
+              <RowTemplate Context="pre">
+                <MudTd>@pre.Range</MudTd>
+                <MudTd>@pre.Percentage</MudTd>
+                <MudTd>@pre.TaxableAmount</MudTd>
+              </RowTemplate>
+              <FooterContent>
+                <MudTr>
+                  <MudTd ColSpan="2">Total:</MudTd>
+                  <MudTd>
+                    @pre2023bracket.Sum(r => Convert.ToDecimal(r.TaxableAmount)).ToString("N2")
+                  </MudTd>
+                </MudTr>
+              </FooterContent>
+            </MudTable>
+          </MudPaper>
+        </MudTd>
+
+        <!-- Right Column: RR-8 2018 Bracket -->
+        <MudTd>
+          <MudText Color="Color.Error">@rr82018Tax / month</MudText>
+          <MudPaper Class="pa-4">
+            <MudTable T="TaxBracket" Items="@rr82018bracket" Dense="true">
+              <HeaderContent>
+                <MudTh>Salary</MudTh>
+                <MudTh>Percentage</MudTh>
+                <MudTh>Taxable Amount</MudTh>
+              </HeaderContent>
+              <RowTemplate Context="rr">
+                <MudTd>@rr.Range</MudTd>
+                <MudTd>@rr.Percentage</MudTd>
+                <MudTd>@rr.TaxableAmount</MudTd>
+              </RowTemplate>
+              <FooterContent>
+                <MudTr>
+                  <MudTd ColSpan="2">Total:</MudTd>
+                  <MudTd>
+                    @rr82018bracket.Sum(r => Convert.ToDecimal(r.TaxableAmount)).ToString("N2")
+                  </MudTd>
+                </MudTr>
+              </FooterContent>
+            </MudTable>
+          </MudPaper>
+        </MudTd>
+      </MudTr>
+    }
+    else
+    {
+      <MudTr>
+        <MudTd ColSpan="2"></MudTd>
+      </MudTr>
+    }
+
+    <!-- Third Row: Philhealth -->
+    <MudTr>
+      <MudTd ColSpan="2">Philhealth</MudTd>
+    </MudTr>
+    <MudTr>
+      <MudTd ColSpan="2">
+        @if(phCalculations?.Any() ?? false)
+        {
+          <MudText Color="Color.Error">
+            Employee Share: @phCalculationOverTwo / month
+          </MudText>
+          <br />
+          <MudText Color="Color.Error">
+            Employer Share: @phCalculationOverTwo / month
+          </MudText>
+          <MudPaper Class="pa-4">
+            <MudTable T="KeyValuePair<PhilhealthBracket, decimal>" Items="@phCalculations.ToList()" Dense="true">
+              <HeaderContent>
+                <MudTh>Year</MudTh>
+                <MudTh>Premium Rate</MudTh>
+                <MudTh>Max Contribution</MudTh>
+              </HeaderContent>
+              <RowTemplate Context="pc">
+                <MudTd>@(pc.Key.Year >= 2024 ? ">=2024" : pc.Key.Year)</MudTd>
+                <MudTd>@((pc.Key.PremiumRate * 100).ToString("N2"))%</MudTd>
+                <MudTd>@pc.Value.ToString("N2")</MudTd>
+              </RowTemplate>
+            </MudTable>
+          </MudPaper>
+        }
+      </MudTd>
+    </MudTr>
+
+    <!-- Fourth Row: Pagibig -->
+    <MudTr>
+      <MudTd ColSpan="2">Pagibig</MudTd>
+    </MudTr>
+    <MudTr>
+      <MudTd ColSpan="2">
+        @if(pagibigBracket != null)
+        {
+          <MudText Color="Color.Error">
+            Employee Share: @pagibigBracket.EEShare.ToString("N2") / month
+          </MudText>
+          <br />
+          <MudText Color="Color.Error">
+            Employer Share: @pagibigBracket.ERShare.ToString("N2") / month
+          </MudText>
+        }
+      </MudTd>
+    </MudTr>
+
+    <!-- Fifth Row: SSS -->
+    <MudTr>
+      <MudTd ColSpan="2">SSS</MudTd>
+    </MudTr>
+    <MudTr>
+      <MudTd ColSpan="2">
+        @if(sssBracket != null)
+        {
+          <MudText Color="Color.Error">
+            Employee Share: @sssBracket.EEShare.ToString("N2") / month
+          </MudText>
+          <br />
+          <MudText Color="Color.Error">
+            Employer Share: @sssBracket.ERShare.ToString("N2") / month
+          </MudText>
+          <br />
+          <MudText Color="Color.Error">
+            Total Share: @sssBracket.TotalShare.ToString("N2") / month
+          </MudText>
+        }
+      </MudTd>
+    </MudTr>
+    <MudTr>
+        <MudTd>
+            <MudPaper class="pa-4">
+                <MudTable Items="@sssBracketList" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Salary</MudTh>
+                        <MudTh>EC (ER)</MudTh>
+                        <MudTh>Contribution (ER / EE)</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="sssBL">
+                        <MudTd>@sssBL.MinSalary - @sssBL.MaxSalary</MudTd>
+                        <MudTd>@sssBL.EC</MudTd>
+                        <MudTd>@sssBL.Contribution / @(@sssBL.Contribution / 2)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+              </MudPaper>
+        </MudTd>
+        <MudTd>
+            <MudPaper class="pa-4">
+                <MudTable Items="@mpfBracketList" Hover="true" Bordered="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Salary</MudTh>
+                        <MudTh>MPF (ER / EE)</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="mpfBl">
+                        <MudTd>@mpfBl.MinSalary - @mpfBl.MaxSalary</MudTd>
+                        <MudTd>@mpfBl.MPF / @(@mpfBl.MPF / 2)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+              </MudPaper>
+        </MudTd>
+    </MudTr>
+  </RowTemplate>
+</MudTable>
+
+	<MudSpacer/>
+
+	<MudTable T="object" Items="@(new object[] { new object() })" Hover="true">
+		<HeaderContent>
+			<MudTh>References:</MudTh>
+		</HeaderContent>
+		<RowTemplate Context="item">
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://www.bvr-cpaconsultants.com/articles/bir-rr-8-2018-train-income-tax-guidelines" Target="_blank">
+						RR-8 2018 Train Income Tax Guidelines
+					</MudLink>
+				</MudTd>
+			</MudTr>
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://www.icalculator.info/philippines/salary-calculator/annual/2023.html" Target="_blank">
+						2023 Annual Tax Calculator
+					</MudLink>
+				</MudTd>
+			</MudTr>
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://www.icalculator.info/philippines/salary-calculator/annual/2022.html" Target="_blank">
+						2022 Annual Tax Calculator
+					</MudLink>
+				</MudTd>
+			</MudTr>
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://taxcalculatorphilippines.com/pag-ibig-contribution-calculator" Target="_blank">
+						Pagibig Contribution Calculator
+					</MudLink>
+				</MudTd>
+			</MudTr>
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://mpm.ph/philhealth-contribution-table-2021-2022-2023-2024-2025/" Target="_blank">
+						Philhealth Contribution Table
+					</MudLink>
+				</MudTd>
+			</MudTr>
+			<MudTr>
+				<MudTd>
+					<MudLink Href="https://filipiknow.net/sss-contribution/" Target="_blank">
+						SSS Contribution Table
+					</MudLink>
+				</MudTd>
+			</MudTr>
+		</RowTemplate>
+	</MudTable>
+</MudContainer>
+
+@code {
+    // Dummy data source so the table's type can be inferred.
+    private object[] emptyItems = new object[0];
+}
+
+
+@code {
+    public decimal monthlySalary = 0.0m;
+    string? pre2023Tax, rr82018Tax, phCalculationOverTwo, ipAddress;
+    List<TaxBracket> pre2023bracket, rr82018bracket;
+    Dictionary<PhilhealthBracket, decimal> phCalculations;
+    EmploymentShareBracket pagibigBracket, sssBracket;
+    List<SSSBracket> sssBracketList;
+    List<SSSMPFBracket> mpfBracketList;
+    decimal net;
+
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Task.Factory.StartNew(Calculate);
+        }
+    }
+
+    private void Calculate()
+    {
+        var taxCalculation = new TaxCalculator(monthlySalary).Calculate();
+        pre2023Tax = taxCalculation.Item2[0];
+        rr82018Tax = taxCalculation.Item2[1];
+        pre2023bracket = taxCalculation.Item1[0];
+        rr82018bracket = taxCalculation.Item1[1];
+
+        var philhealth = new PhilhealthCalculator(monthlySalary);
+        phCalculationOverTwo = (philhealth.Calculate(DateTime.Now.Year) / 2).ToString("N2");
+        phCalculations = philhealth.Calculate();
+
+        pagibigBracket = new PagibigCalculator(monthlySalary).Calculate();
+        sssBracket = new SSSCalculator(monthlySalary).Calculate();
+        sssBracketList = new SSSCalculator(monthlySalary).ListSSSBracket();
+        mpfBracketList = new SSSCalculator(monthlySalary).ListSSSMPFBracket();
+        net = new NetCalculator().Calculate(monthlySalary, rr82018Tax, phCalculationOverTwo, pagibigBracket.EEShare.ToString("N2"), sssBracket.EEShare.ToString("N2"));
+	}
+}

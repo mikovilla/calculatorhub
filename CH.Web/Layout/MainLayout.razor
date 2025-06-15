@@ -1,0 +1,48 @@
+﻿@inherits LayoutComponentBase
+
+<MudLayout>
+    <MudAppBar Color="Color.Primary" Elevation="4">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-4">The Calculator Hub</MudText>
+    </MudAppBar>
+    <MudDrawer Style="padding: 0.5rem;" @bind-Open="_drawerOpen" Elevation="4" ClipMode="DrawerClipMode.Never">
+        <MudDrawerHeader>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Calculate" Size="Size.Medium" />
+                <MudText Typo="Typo.subtitle1" Class="ml-2">Calculators</MudText>
+            </MudStack>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All">
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Home" />
+                    <MudText Typo="Typo.subtitle2" Class="ml-2">Home</MudText>
+                </MudStack>
+            </MudNavLink>
+            <MudNavLink Href="/rr82018" Match="NavLinkMatch.All">
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Money" />
+                    <MudText Typo="Typo.subtitle2" Class="ml-2">RR-8 2018</MudText>
+                </MudStack>
+            </MudNavLink>
+            <MudNavLink Href="/addon" Match="NavLinkMatch.All">
+                <MudStack Row="true" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.CreditCard" />
+                    <MudText Typo="Typo.subtitle2" Class="ml-2">Add-On Interest Rate</MudText>
+                </MudStack>
+            </MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

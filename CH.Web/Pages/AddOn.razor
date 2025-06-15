@@ -1,0 +1,99 @@
+﻿@page "/addon"
+@using CH.Web.Models
+@inject IJSRuntime JS
+
+<MudContainer>
+    <br/>
+    <!-- Page heading -->
+    <MudText Typo="Typo.h5" Class="mb-2">Add-On Interest Rate Calculator</MudText>
+    <MudDivider Class="mb-4" />
+
+    <!-- Form: using MudForm and numeric fields -->
+    <EditForm Model="@loanInputs" OnValidSubmit="CalculateLoan">
+        <MudStack Spacing="2">
+            <MudNumericField T="int"
+                             Label="Principal Amount (₱)"
+                             @bind-Value="loanInputs.PrincipalAmount"
+                             Variant="Variant.Filled" />
+            <MudNumericField T="decimal"
+                             Label="Add-On Interest Rate (%)"
+                             @bind-Value="loanInputs.AddOnInterestRate"
+                             Variant="Variant.Filled"
+                             Step="0.01m"/>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">
+                Calculate
+            </MudButton>
+        </MudStack>
+    </EditForm>
+
+    <!-- Display results if any -->
+    @if (loanCalculations.Any())
+    {
+        <MudTable Items="loanCalculations" Class="mt-6">
+            <HeaderContent>
+                <MudTh>Months to Pay</MudTh>
+                <MudTh>Simple Interest</MudTh>
+                <MudTh>Factor Rate</MudTh>
+                <MudTh>Annual/Monthly EIR (%)</MudTh>
+                <MudTh>Monthly Amortization</MudTh>
+                <MudTh>Interest</MudTh>
+                <MudTh>Total Payment</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="calc">
+                <MudTd DataLabel="Months to Pay">@calc.MonthsToPay</MudTd>
+                <MudTd DataLabel="Simple Interest">@calc.SimpleInterest.ToString("P2")</MudTd>
+                <MudTd DataLabel="Factor Rate">@calc.FactorRate.ToString("P4")</MudTd>
+                <MudTd DataLabel="EIR (%)">@calc.EffectiveInterestRateA.ToString("P2") / (@calc.EffectiveInterestRateM.ToString("P2"))</MudTd>
+                <MudTd DataLabel="Monthly Amortization">@calc.MonthlyAmortization.ToString("N2")</MudTd>
+                <MudTd DataLabel="Interest">@calc.Interest.ToString("N2")</MudTd>
+                <MudTd DataLabel="Total Payment">@calc.TotalPayment.ToString("N2")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    // Model for input
+    private LoanInputs loanInputs = new LoanInputs()
+    {
+        PrincipalAmount = 100_000,
+        AddOnInterestRate = 0.39m
+    };
+
+    // Calculation results
+    private List<LoanCalculation> loanCalculations = new List<LoanCalculation>();
+
+    private void CalculateLoan()
+    {
+        loanCalculations.Clear();
+
+        foreach (var months in new[] { 3, 6, 9, 12, 18, 24, 36, 48, 60 })
+        {
+            var simpleInterest = (loanInputs.AddOnInterestRate * months) / 100;
+            var factorRate = ((1 + simpleInterest) / months) / 100;
+            var monthlyAmortization = (loanInputs.PrincipalAmount * factorRate) * 100;
+            var interest = loanInputs.PrincipalAmount * simpleInterest;
+            var totalPayment = loanInputs.PrincipalAmount + interest;
+            var eirA = (decimal)Math.Pow((double)(1 + LoanCalculation.CalculateMonthlyRate(loanInputs.PrincipalAmount, Convert.ToDouble(monthlyAmortization), months)), 12) - 1;
+            var eirM = eirA / 12;
+
+            loanCalculations.Add(new LoanCalculation
+            {
+                MonthsToPay = months,
+                SimpleInterest = simpleInterest,
+                FactorRate = factorRate,
+                EffectiveInterestRateA = eirA,
+                EffectiveInterestRateM = eirM,
+                MonthlyAmortization = monthlyAmortization,
+                Interest = interest,
+                TotalPayment = totalPayment
+            });
+        }
+    }
+
+    public class LoanInputs
+    {
+        public int PrincipalAmount { get; set; }
+        public decimal AddOnInterestRate { get; set; }
+    }
+}
