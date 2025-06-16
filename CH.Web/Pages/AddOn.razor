@@ -1,4 +1,5 @@
 ﻿@page "/addon"
+@using CH.Web.Functions
 @using CH.Web.Models
 @inject IJSRuntime JS
 
@@ -56,7 +57,7 @@
         AddOnInterestRate = 0.39m
     };
 
-    private List<LoanCalculation> loanCalculations = new List<LoanCalculation>();
+    private List<AddOnModel> loanCalculations = new List<AddOnModel>();
 
     private void CalculateLoan()
     {
@@ -69,10 +70,10 @@
             var monthlyAmortization = (loanInputs.PrincipalAmount * factorRate) * 100;
             var interest = loanInputs.PrincipalAmount * simpleInterest;
             var totalPayment = loanInputs.PrincipalAmount + interest;
-            var eirA = (decimal)Math.Pow((double)(1 + LoanCalculation.CalculateMonthlyRate(loanInputs.PrincipalAmount, Convert.ToDouble(monthlyAmortization), months)), 12) - 1;
+            var eirA = (decimal)Math.Pow((double)(1 + AddOnFunction.CalculateMonthlyRate(loanInputs.PrincipalAmount, Convert.ToDouble(monthlyAmortization), months)), 12) - 1;
             var eirM = eirA / 12;
 
-            loanCalculations.Add(new LoanCalculation
+            loanCalculations.Add(new AddOnModel
             {
                 MonthsToPay = months,
                 SimpleInterest = simpleInterest,

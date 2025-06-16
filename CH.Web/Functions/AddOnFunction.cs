@@ -1,16 +1,7 @@
-﻿namespace CH.Web.Models
+﻿namespace CH.Web.Functions
 {
-    public class LoanCalculation
+    public class AddOnFunction
     {
-        public int MonthsToPay { get; set; }
-        public decimal SimpleInterest { get; set; }
-        public decimal FactorRate { get; set; }
-        public decimal EffectiveInterestRateA { get; set; }
-        public decimal EffectiveInterestRateM { get; set; }
-        public decimal MonthlyAmortization { get; set; }
-        public decimal Interest { get; set; }
-        public decimal TotalPayment { get; set; }
-
         /// <summary>
         /// Finds the monthly effective interest rate using a binary search.
         /// </summary>

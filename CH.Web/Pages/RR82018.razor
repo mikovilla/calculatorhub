@@ -1,6 +1,7 @@
 ﻿@page "/rr82018"
 @using CH.Web.Models
-@using static CH.Web.Models.Bracket
+@using static CH.Web.Functions.RR82018Function
+@using static CH.Web.Models.RR82018Model
 
 <MudContainer>
     <br/>
@@ -86,14 +87,6 @@
                         <MudTd>@pre.Percentage</MudTd>
                         <MudTd>@pre.TaxableAmount</MudTd>
                       </RowTemplate>
-                      <FooterContent>
-                        <MudTr>
-                          <MudTd ColSpan="2">Total:</MudTd>
-                          <MudTd>
-                            @pre2023bracket.Sum(r => Convert.ToDecimal(r.TaxableAmount)).ToString("N2")
-                          </MudTd>
-                        </MudTr>
-                      </FooterContent>
                     </MudTable>
                   </MudPaper>
                 </MudTd>
@@ -113,14 +106,6 @@
                         <MudTd>@rr.Percentage</MudTd>
                         <MudTd>@rr.TaxableAmount</MudTd>
                       </RowTemplate>
-                      <FooterContent>
-                        <MudTr>
-                          <MudTd ColSpan="2">Total:</MudTd>
-                          <MudTd>
-                            @rr82018bracket.Sum(r => Convert.ToDecimal(r.TaxableAmount)).ToString("N2")
-                          </MudTd>
-                        </MudTr>
-                      </FooterContent>
                     </MudTable>
                   </MudPaper>
                 </MudTd>
