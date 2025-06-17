@@ -1,0 +1,164 @@
+﻿@page "/mp2"
+
+<MudContainer>
+    <br />
+    <MudText Typo="Typo.h5" Class="mb-2">Pagibig MP2 Dividend Calculator</MudText>
+    <MudDivider Class="mb-4" />
+    <EditForm Model="@dividendInputs" OnValidSubmit="CalculateDividend">
+        <MudStack Spacing="2">
+            <MudNumericField T="decimal"
+                             Label="Initial Amount (₱)"
+                             @bind-Value="dividendInputs.InitialAmount"
+                             Variant="Variant.Filled" />
+            <MudNumericField T="decimal"
+                             Label="Monthly Savings (₱)"
+                             @bind-Value="dividendInputs.MonthlySavings"
+                             Variant="Variant.Filled" />
+            <MudNumericField T="decimal"
+                             Label="Dividend Rate (%)"
+                             @bind-Value="dividendInputs.DividendRate"
+                             Variant="Variant.Filled"
+                             Step="0.01m" />
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled">
+                Calculate
+            </MudButton>
+        </MudStack>
+    </EditForm>
+
+    @if (CompoundedSavings.Any())
+    {
+        <br/>
+        <MudText Typo="Typo.h6">Compounded Savings (@CompoundedSavings.Sum(c => c.Dividend).ToString("N2"))</MudText>
+        <MudTable Items="CompoundedSavings" Class="mt-6">
+            <HeaderContent>
+                <MudTh>Year</MudTh>
+                <MudTh>Cumulative Savings</MudTh>
+                <MudTh>Dividend</MudTh>
+                <MudTh>Amount</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="result">
+                <MudTd>@result.Year</MudTd>
+                <MudTd>@result.CumulativeSavings.ToString("N2")</MudTd>
+                <MudTd>@result.Dividend.ToString("N2")</MudTd>
+                <MudTd>@result.Amount.ToString("N2")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+    @if (AnnualDividends.Any())
+    {
+        <br />
+        <MudText Typo="Typo.h6">Annual Dividend (@AnnualDividends.Sum(c => c.Dividend).ToString("N2"))</MudText>
+        <MudTable Items="AnnualDividends" Class="mt-6">
+            <HeaderContent>
+                <MudTh>Year</MudTh>
+                <MudTh>Cumulative Savings</MudTh>
+                <MudTh>Dividend Payout</MudTh>
+                <MudTh>Amount</MudTh>
+            </HeaderContent>
+            <RowTemplate Context="result">
+                <MudTd>@result.Year</MudTd>
+                <MudTd>@result.CumulativeSavings.ToString("N2")</MudTd>
+                <MudTd>@result.Dividend.ToString("N2")</MudTd>
+                <MudTd>@result.Amount.ToString("N2")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private DividendInputs dividendInputs = new()
+    {
+        InitialAmount = 100000,
+        MonthlySavings = 10000,
+        DividendRate = 7.1M
+    };
+
+    private List<DividendResult> CompoundedSavings = new();
+    private List<DividendResult> AnnualDividends = new();
+
+    private void CalculateDividend()
+    {
+        CompoundedSavings.Clear();
+        AnnualDividends.Clear();
+
+        decimal currentAmount = dividendInputs.InitialAmount;
+        decimal weightYear1 = 5.5m;
+        decimal weightOtherYears = 6.5m;
+
+        decimal rate = dividendInputs.DividendRate / 100m;
+
+        for (int year = 1; year <= 5; year++)
+        {
+            int depositsThisYear = (year == 1) ? 11 : 12;
+            decimal depositsAmount = dividendInputs.MonthlySavings * depositsThisYear;
+            decimal compoundCumulativeSavings = currentAmount + depositsAmount;
+
+            decimal dividendOnBalance = currentAmount * rate;
+            decimal weightFactor = (year == 1) ? weightYear1 : weightOtherYears;
+            decimal dividendOnDeposits = dividendInputs.MonthlySavings * weightFactor * rate;
+            decimal dividend = dividendOnBalance + dividendOnDeposits;
+
+            decimal totalAccumulated = compoundCumulativeSavings + dividend;
+
+            CompoundedSavings.Add(new DividendResult
+            {
+                Year = year,
+                CumulativeSavings = compoundCumulativeSavings,
+                Dividend = dividend,
+                Amount = totalAccumulated
+            });
+
+            currentAmount = totalAccumulated;
+        }
+
+        int depositsYear1 = 11;
+        int depositsOtherYears = 12;
+
+        decimal annualCumulativeSavings = dividendInputs.InitialAmount + dividendInputs.MonthlySavings * depositsYear1;
+        decimal dividendYear = ((dividendInputs.InitialAmount + annualCumulativeSavings) / 2m) * rate;
+        AnnualDividends.Add(new DividendResult
+        {
+            Year = 1,
+            CumulativeSavings = annualCumulativeSavings,
+            Dividend = dividendYear,
+            Amount = annualCumulativeSavings
+        });
+
+        decimal extraAdjustment = dividendInputs.MonthlySavings * depositsOtherYears * ((6.5m / 12m) - 0.5m) * rate;
+
+        decimal previousCumulative = annualCumulativeSavings;
+        for (int year = 2; year <= 5; year++)
+        {
+            annualCumulativeSavings = previousCumulative + dividendInputs.MonthlySavings * depositsOtherYears;
+            decimal avgBalance = (previousCumulative + annualCumulativeSavings) / 2m;
+            dividendYear = avgBalance * rate + extraAdjustment;
+
+            AnnualDividends.Add(new DividendResult
+            {
+                Year = year,
+                CumulativeSavings = annualCumulativeSavings,
+                Dividend = dividendYear,
+                Amount = annualCumulativeSavings
+            });
+
+            previousCumulative = annualCumulativeSavings;
+        }
+    }
+
+    private class DividendInputs
+    {
+        public decimal InitialAmount { get; set; }
+        public decimal MonthlySavings { get; set; }
+        public decimal DividendRate { get; set; }
+    }
+
+    private class DividendResult
+    {
+        public int Year { get; set; }
+        public decimal CumulativeSavings { get; set; }
+        public decimal Dividend { get; set; }
+        public decimal Amount { get; set; }
+    }
+
+}
